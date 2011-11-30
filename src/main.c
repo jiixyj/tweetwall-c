@@ -2,6 +2,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <iconv.h>
 
 #include <jansson.h>
 #include <curl/curl.h>
@@ -137,6 +138,16 @@ static char *curl_fgraum_twitter()
 
 int main(int argc, char *argv[])
 {
+    iconv_t alpha_converter;
+
+    alpha_converter = iconv_open("ALPHA//TRANSLIT//IGNORE", "UTF-8");
+    if (alpha_converter == (iconv_t) -1) {
+        perror("iconv_open");
+        fprintf(stderr, "Please set GCONV_PATH to directory where gconv-modules"
+                        " for the ALPHA charset lies. This is src/iconv-alpha"
+                        " for the CMake build.\n\n");
+    }
+
     for (;;) {
         int i;
         struct tweet tweets[NUMBER_OF_TWEETS] = { 0 };
@@ -151,7 +162,21 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
             if (tweets[i].text) {
-                printf("%s\n", tweets[i].text);
+                if (alpha_converter != (iconv_t) -1) {
+                    size_t inbytes = strlen(tweets[i].text);
+                    size_t outbytes = inbytes;
+                    char *alpha = calloc(outbytes + 1, 1);
+                    char *inp = tweets[i].text;
+                    char *outp = alpha;
+
+                    iconv(alpha_converter, &inp, &inbytes, &outp, &outbytes);
+                    printf("utf-8: %s\n", tweets[i].text);
+                    printf("alpha: %s\n", alpha);
+
+                    free(alpha);
+                } else {
+                    printf("%s\n", tweets[i].text);
+                }
             }
 
             free(tweets[i].from_user);
