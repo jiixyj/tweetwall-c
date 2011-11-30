@@ -1,2 +1,6 @@
-add_executable(tweetwall main entities)
-target_link_libraries(tweetwall jansson curl)
+cmake_minimum_required(VERSION 2.8)
+
+include_directories(3rdparty)
+
+add_subdirectory(3rdparty)
+add_subdirectory(src)
