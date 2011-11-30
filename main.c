@@ -16,23 +16,28 @@ static size_t callback_func(void *ptr, size_t size, size_t count, void *stream)
     return size * count;
 }
 
+static char *get_twitter_search_results()
+{
+    char *json;
+
+    CURL *curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, "http://search.twitter.com/search.json?q=to:fgraum&rpp=3");
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &json);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback_func);
+    curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    return json;
+}
+
 int main(int argc, char *argv[])
 {
     json_t *root, *results;
     json_error_t error;
-    char *json;
-    CURL *curl;
     unsigned int i;
+    char *json;
 
-    curl = curl_easy_init();
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "http://search.twitter.com/search.json?q=to:fgraum&rpp=3");
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &json);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback_func);
-        curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-    }
-
+    json = get_twitter_search_results();
     root = json_loads(json, 0, &error);
     free(json);
     results = json_object_get(root, "results");
