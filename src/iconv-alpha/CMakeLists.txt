@@ -1,3 +1,5 @@
+set(CMAKE_SHARED_LIBRARY_PREFIX)
+
 add_library(ALPHA SHARED alpha.c alpha.h)
 
 if(NOT GLIBC_SOURCE_FOLDER)
@@ -17,3 +19,10 @@ add_custom_command(OUTPUT alpha.h
     WORKING_DIRECTORY ${GLIBC_SOURCE_FOLDER}/iconvdata
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ALPHA
 )
+
+add_custom_target(gconv-modules
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/gconv-modules
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/gconv-modules
+)
+
+add_dependencies(ALPHA gconv-modules)
