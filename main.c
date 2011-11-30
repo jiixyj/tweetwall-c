@@ -18,13 +18,11 @@ static size_t callback_func(void *ptr, size_t size, size_t count, void *stream)
 
 int main(int argc, char *argv[])
 {
-    char *json = NULL;
-    json_t *root;
+    json_t *root, *results;
     json_error_t error;
-    json_t *commits;
-    const char *message_text;
-    char *result;
+    char *json;
     CURL *curl;
+    unsigned int i;
 
     curl = curl_easy_init();
     if (curl) {
@@ -33,16 +31,35 @@ int main(int argc, char *argv[])
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback_func);
         curl_easy_perform(curl);
         curl_easy_cleanup(curl);
-        printf("%s\n", json);
     }
 
     root = json_loads(json, 0, &error);
-    commits = json_object_get(root, "test");
-    message_text = json_string_value(commits);
-    result = strdup(message_text);
-    decode_html_entities_utf8(result, NULL);
-    printf("%s\n", result);
-    free(result);
+    free(json);
+    results = json_object_get(root, "results");
+    for (i = 0; i < json_array_size(results); ++i) {
+        json_t *result, *from_user, *text;
+        const char *from_user_cstr, *text_cstr;
+        char *from_user_esc, *text_esc;
+
+        result = json_array_get(results, i);
+        from_user = json_object_get(result, "from_user");
+        text = json_object_get(result, "text");
+
+        from_user_cstr = json_string_value(from_user);
+        text_cstr = json_string_value(text);
+
+        from_user_esc = strdup(from_user_cstr);
+        text_esc = strdup(text_cstr);
+
+        decode_html_entities_utf8(from_user_esc, NULL);
+        decode_html_entities_utf8(text_esc, NULL);
+
+        printf("%s: %s\n", from_user_esc, text_esc);
+
+        free(from_user_esc);
+        free(text_esc);
+    }
+
     json_decref(root);
     return 0;
 }
