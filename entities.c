@@ -345,7 +345,7 @@ static _Bool parse_entity(const char *current, char **to,
 		if(entity)
 		{
 			size_t len = strlen(entity);
-			memcpy(*to, entity, len);
+			memmove(*to, entity, len);
 
 			*to += len;
 			*from = end + 1;
@@ -367,7 +367,7 @@ size_t decode_html_entities_utf8(char *dest, const char *src)
 	const char *current;
 	while((current = strchr(from, '&')))
 	{
-		memcpy(to, from, (size_t)(current - from));
+		memmove(to, from, (size_t)(current - from));
 		to += current - from;
 
 		if(parse_entity(current, &to, &from))
@@ -379,7 +379,7 @@ size_t decode_html_entities_utf8(char *dest, const char *src)
 
 	size_t remaining = strlen(from);
 
-	memcpy(to, from, remaining);
+	memmove(to, from, remaining);
 	to += remaining;
 
 	*to = 0;
