@@ -10,8 +10,8 @@
 
 #include "entities.h"
 
-#define NUMBER_OF_TWEETS 5
-#define NUMBER_OF_TWEETS_STR "5"
+#define NUMBER_OF_TWEETS 3
+#define NUMBER_OF_TWEETS_STR "3"
 
 static int loop = 1;
 
@@ -22,6 +22,7 @@ static void exit_handler(int signal)
 }
 
 struct tweet {
+    char *created_at;
     char *from_user;
     char *id_str;
     char *text;
@@ -29,9 +30,11 @@ struct tweet {
 
 static void tweet_free(struct tweet *tweet)
 {
+    free(tweet->created_at);
     free(tweet->from_user);
     free(tweet->id_str);
     free(tweet->text);
+    tweet->created_at = NULL;
     tweet->from_user = NULL;
     tweet->id_str = NULL;
     tweet->text = NULL;
@@ -41,9 +44,11 @@ static void tweet_move(struct tweet *to, struct tweet *from)
 {
     tweet_free(to);
 
+    to->created_at = from->created_at;
     to->from_user = from->from_user;
     to->id_str = from->id_str;
     to->text = from->text;
+    from->created_at = NULL;
     from->from_user = NULL;
     from->id_str = NULL;
     from->text = NULL;
@@ -95,28 +100,31 @@ static void parse_tweets(char *json, struct tweet *tweets)
     }
 
     for (i = 0; i < json_array_size(results); ++i) {
-        json_t *result, *from_user, *text, *id_str;
-        const char *from_user_cstr, *text_cstr, *id_str_cstr;
+        json_t *result, *created_at, *from_user, *text, *id_str;
+        const char *created_at_cstr, *from_user_cstr, *text_cstr, *id_str_cstr;
 
         if (!(result = json_array_get(results, i))) {
             fprintf(stderr, "Could not get results array from response\n");
             continue;
         }
 
-        if (!(from_user = json_object_get(result, "from_user")) ||
-               !(id_str = json_object_get(result, "id_str")) ||
-                 !(text = json_object_get(result, "text"))) {
+        if (!(created_at = json_object_get(result, "created_at")) ||
+             !(from_user = json_object_get(result, "from_user")) ||
+                !(id_str = json_object_get(result, "id_str")) ||
+                  !(text = json_object_get(result, "text"))) {
             fprintf(stderr, "Could not get specified field(s) from result\n");
             continue;
         }
 
-        if (!(from_user_cstr = json_string_value(from_user)) ||
-               !(id_str_cstr = json_string_value(id_str)) ||
-                 !(text_cstr = json_string_value(text))) {
+        if (!(created_at_cstr = json_string_value(created_at)) ||
+             !(from_user_cstr = json_string_value(from_user)) ||
+                !(id_str_cstr = json_string_value(id_str)) ||
+                  !(text_cstr = json_string_value(text))) {
             fprintf(stderr, "Expected different type of result field\n");
             continue;
         }
 
+        tweets[i].created_at = strdup(created_at_cstr);
         tweets[i].from_user = strdup(from_user_cstr);
         tweets[i].text = strdup(text_cstr);
         tweets[i].id_str = strdup(id_str_cstr);
@@ -202,6 +210,40 @@ static int compare_tweets(struct tweet *old, struct tweet *new)
     return 0;
 }
 
+static int build_string_for_pager(char **buffer, size_t *buffer_size,
+                                  iconv_t alpha_converter, struct tweet *tweets)
+{
+    int i;
+    FILE *memstream = open_memstream(buffer, buffer_size);
+    if (!memstream) {
+        perror("open_memstream");
+        return 1;
+    }
+
+    for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
+        if (tweets[i].text) {
+            if (alpha_converter != (iconv_t) -1) {
+                char *alpha = utf8_to_alpha(alpha_converter, tweets[i].text);
+                char *user_alpha = utf8_to_alpha(alpha_converter, tweets[i].from_user);
+
+                fwrite(user_alpha, strlen(user_alpha), 1, memstream);
+                fwrite(": ", 2, 1, memstream);
+                fwrite(alpha + 8, strlen(alpha) - 8, 1, memstream);
+
+                free(alpha);
+                free(user_alpha);
+
+                if (i != NUMBER_OF_TWEETS - 1)
+                    fwrite("          ", 10, 1, memstream);
+            }
+        }
+    }
+
+    fclose(memstream);
+    fprintf(stderr, "%s\n", *buffer);
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     iconv_t alpha_converter;
@@ -222,6 +264,10 @@ int main(int argc, char *argv[])
         struct tweet tweets[NUMBER_OF_TWEETS] = { 0 };
         char *json;
         int new_tweets_different = 0;
+        char *pager_string;
+        size_t pager_string_size;
+        char *packet;
+        size_t packet_size;
 
         json = curl_fgraum_twitter();
         if (!json) {
@@ -233,27 +279,20 @@ int main(int argc, char *argv[])
         new_tweets_different = compare_tweets(last_tweets, tweets);
         if (!new_tweets_different) {
             fprintf(stderr, "New tweets are not different\n");
+            goto next;
         }
+
+        build_string_for_pager(&pager_string, &pager_string_size,
+                               alpha_converter, tweets);
+        alpha_string_packet(pager_string, pager_string_size,
+                            &packet, &packet_size);
+
+        fwrite(packet, packet_size, 1, stdout);
+        fflush(stdout);
 
         for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
-            if (tweets[i].text) {
-                if (alpha_converter != (iconv_t) -1) {
-                    char *alpha = utf8_to_alpha(alpha_converter, tweets[i].text);
-                    char *user_alpha = utf8_to_alpha(alpha_converter, tweets[i].from_user);
-
-                    printf("utf-8: %s: %s\n", tweets[i].from_user, tweets[i].text + 8);
-                    printf("alpha: %s: %s\n", user_alpha, alpha + 8);
-
-                    free(alpha);
-                    free(user_alpha);
-                } else {
-                    printf("%s: %s\n", tweets[i].from_user, tweets[i].text);
-                }
-            }
-
             tweet_move(&last_tweets[i], &tweets[i]);
         }
-        printf("\n");
 
       next:
         sleep(10);

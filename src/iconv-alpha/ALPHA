@@ -198,6 +198,6 @@ CHARMAP
 <U00CD>     /xbf         LATIN CAPITAL LETTER I WITH ACUTE
 <U00D5>     /xc0         LATIN CAPITAL LETTER O WITH TILDE
 <U00F5>     /xc1         LATIN SMALL LETTER O WITH TILDE
-<U20AC>     /xc2         EURO SIGN
+% <U20AC>     /xc2         EURO SIGN
 %           /xc3   TODO: Y punctuation key
 END CHARMAP
