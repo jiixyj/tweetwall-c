@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <iconv.h>
+#include <signal.h>
 
 #include <jansson.h>
 #include <curl/curl.h>
@@ -11,6 +12,14 @@
 
 #define NUMBER_OF_TWEETS 5
 #define NUMBER_OF_TWEETS_STR "5"
+
+static int loop = 1;
+
+void exit_handler(int signal)
+{
+    fprintf(stderr, "Caught signal %d\n", signal);
+    loop = 0;
+}
 
 struct tweet {
     char *from_user;
@@ -140,6 +149,8 @@ int main(int argc, char *argv[])
 {
     iconv_t alpha_converter;
 
+    signal(SIGINT, exit_handler);
+
     alpha_converter = iconv_open("ALPHA//TRANSLIT//IGNORE", "UTF-8");
     if (alpha_converter == (iconv_t) -1) {
         perror("iconv_open");
@@ -148,7 +159,7 @@ int main(int argc, char *argv[])
                         " for the CMake build.\n\n");
     }
 
-    for (;;) {
+    while (loop) {
         int i;
         struct tweet tweets[NUMBER_OF_TWEETS] = { 0 };
         char *json;
@@ -188,6 +199,8 @@ int main(int argc, char *argv[])
       next:
         sleep(10);
     }
+
+    iconv_close(alpha_converter);
 
     return 0;
 }
