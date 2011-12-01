@@ -163,9 +163,28 @@ static char *utf8_to_alpha(iconv_t alpha_converter, char *utf8)
     return alpha;
 }
 
+static int compare_tweets(struct tweet *old, struct tweet *new)
+{
+    int i;
+    for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
+        if ((old[i].id_str && !new[i].id_str) ||
+            (!old[i].id_str && new[i].id_str)) {
+            return 1;
+        }
+        if (old[i].id_str && new[i].id_str) {
+            if (strcmp(old[i].id_str, new[i].id_str)) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     iconv_t alpha_converter;
+    static struct tweet last_tweets[NUMBER_OF_TWEETS] = { 0 };
+    int i;
 
     signal(SIGINT, exit_handler);
 
@@ -178,9 +197,9 @@ int main(int argc, char *argv[])
     }
 
     while (loop) {
-        int i;
         struct tweet tweets[NUMBER_OF_TWEETS] = { 0 };
         char *json;
+        int new_tweets_different = 0;
 
         json = curl_fgraum_twitter();
         if (!json) {
@@ -189,28 +208,45 @@ int main(int argc, char *argv[])
         parse_tweets(json, tweets);
         free(json);
 
+        new_tweets_different = compare_tweets(last_tweets, tweets);
+        if (!new_tweets_different) {
+            fprintf(stderr, "New tweets are not different\n");
+        }
+
         for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
             if (tweets[i].text) {
                 if (alpha_converter != (iconv_t) -1) {
                     char *alpha = utf8_to_alpha(alpha_converter, tweets[i].text);
+                    char *user_alpha = utf8_to_alpha(alpha_converter, tweets[i].from_user);
 
-                    printf("utf-8: %s\n", tweets[i].text);
-                    printf("alpha: %s\n", alpha);
+                    printf("utf-8: %s: %s\n", tweets[i].from_user, tweets[i].text + 8);
+                    printf("alpha: %s: %s\n", user_alpha, alpha + 8);
 
                     free(alpha);
+                    free(user_alpha);
                 } else {
-                    printf("%s\n", tweets[i].text);
+                    printf("%s: %s\n", tweets[i].from_user, tweets[i].text);
                 }
             }
 
-            free(tweets[i].from_user);
-            free(tweets[i].id_str);
-            free(tweets[i].text);
+            free(last_tweets[i].from_user);
+            free(last_tweets[i].id_str);
+            free(last_tweets[i].text);
+
+            last_tweets[i].from_user = tweets[i].from_user;
+            last_tweets[i].id_str = tweets[i].id_str;
+            last_tweets[i].text = tweets[i].text;
         }
         printf("\n");
 
       next:
         sleep(10);
+    }
+
+    for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
+        free(last_tweets[i].from_user);
+        free(last_tweets[i].id_str);
+        free(last_tweets[i].text);
     }
 
     iconv_close(alpha_converter);
