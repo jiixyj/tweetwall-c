@@ -245,12 +245,13 @@ static int build_string_for_pager(char **buffer, size_t *buffer_size,
                 fwrite(token, strlen(token), 1, memstream);
                 fwrite(" ", 1, 1, memstream);
 
+                if (i != NUMBER_OF_TWEETS - 1) {
+                    fwrite("          ", 10, 1, memstream);
+                }
+
                 free(created_at);
                 free(alpha);
                 free(user_alpha);
-
-                if (i != NUMBER_OF_TWEETS - 1)
-                    fwrite("          ", 10, 1, memstream);
             }
         }
     }
