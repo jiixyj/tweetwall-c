@@ -15,7 +15,7 @@
 
 static int loop = 1;
 
-void exit_handler(int signal)
+static void exit_handler(int signal)
 {
     fprintf(stderr, "Caught signal %d\n", signal);
     loop = 0;
@@ -26,6 +26,28 @@ struct tweet {
     char *id_str;
     char *text;
 };
+
+static void tweet_free(struct tweet *tweet)
+{
+    free(tweet->from_user);
+    free(tweet->id_str);
+    free(tweet->text);
+    tweet->from_user = NULL;
+    tweet->id_str = NULL;
+    tweet->text = NULL;
+}
+
+static void tweet_move(struct tweet *to, struct tweet *from)
+{
+    tweet_free(to);
+
+    to->from_user = from->from_user;
+    to->id_str = from->id_str;
+    to->text = from->text;
+    from->from_user = NULL;
+    from->id_str = NULL;
+    from->text = NULL;
+}
 
 static CURL *twitter_curl_init(FILE *memstream)
 {
@@ -229,13 +251,7 @@ int main(int argc, char *argv[])
                 }
             }
 
-            free(last_tweets[i].from_user);
-            free(last_tweets[i].id_str);
-            free(last_tweets[i].text);
-
-            last_tweets[i].from_user = tweets[i].from_user;
-            last_tweets[i].id_str = tweets[i].id_str;
-            last_tweets[i].text = tweets[i].text;
+            tweet_move(&last_tweets[i], &tweets[i]);
         }
         printf("\n");
 
@@ -244,9 +260,7 @@ int main(int argc, char *argv[])
     }
 
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
-        free(last_tweets[i].from_user);
-        free(last_tweets[i].id_str);
-        free(last_tweets[i].text);
+        tweet_free(&last_tweets[i]);
     }
 
     iconv_close(alpha_converter);
