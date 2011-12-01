@@ -183,7 +183,7 @@ static int compare_tweets(struct tweet *old, struct tweet *new)
 int main(int argc, char *argv[])
 {
     iconv_t alpha_converter;
-    static struct tweet last_tweets[NUMBER_OF_TWEETS] = { 0 };
+    static struct tweet last_tweets[NUMBER_OF_TWEETS];
     int i;
 
     signal(SIGINT, exit_handler);
