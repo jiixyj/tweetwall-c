@@ -223,6 +223,8 @@ static int build_string_for_pager(char **buffer, size_t *buffer_size,
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
         if (tweets[i].text) {
             if (alpha_converter != (iconv_t) -1) {
+                char *created_at = strdup(tweets[i].created_at);
+                char *token;
                 char *alpha = utf8_to_alpha(alpha_converter, tweets[i].text);
                 char *user_alpha = utf8_to_alpha(alpha_converter, tweets[i].from_user);
 
@@ -230,6 +232,20 @@ static int build_string_for_pager(char **buffer, size_t *buffer_size,
                 fwrite(": ", 2, 1, memstream);
                 fwrite(alpha + 8, strlen(alpha) - 8, 1, memstream);
 
+                fwrite(" --- ", 5, 1, memstream);
+                strtok(created_at, " ");
+                token = strtok(NULL, " ");
+                fwrite(token, strlen(token), 1, memstream);
+                fwrite(" ", 1, 1, memstream);
+                token = strtok(NULL, " ");
+                fwrite(token, strlen(token), 1, memstream);
+                fwrite(" ", 1, 1, memstream);
+                token = strtok(NULL, " ");
+                token = strtok(NULL, " ");
+                fwrite(token, strlen(token), 1, memstream);
+                fwrite(" ", 1, 1, memstream);
+
+                free(created_at);
                 free(alpha);
                 free(user_alpha);
 
