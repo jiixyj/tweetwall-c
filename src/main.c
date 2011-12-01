@@ -145,6 +145,24 @@ static char *curl_fgraum_twitter()
     return NULL;
 }
 
+static char *utf8_to_alpha(iconv_t alpha_converter, char *utf8)
+{
+    size_t inbytes = strlen(utf8);
+    size_t outbytes = inbytes;
+    char *alpha = calloc(outbytes + 1, 1);
+    char *outp = alpha;
+    size_t ret;
+
+    ret = iconv(alpha_converter, &utf8, &inbytes, &outp, &outbytes);
+    if (ret == (size_t) -1) {
+        perror("iconv");
+        alpha[0] = '\0';
+    } else if (inbytes != 0) {
+        fprintf(stderr, "iconv: string could not be fully converted\n");
+    }
+    return alpha;
+}
+
 int main(int argc, char *argv[])
 {
     iconv_t alpha_converter;
@@ -174,13 +192,8 @@ int main(int argc, char *argv[])
         for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
             if (tweets[i].text) {
                 if (alpha_converter != (iconv_t) -1) {
-                    size_t inbytes = strlen(tweets[i].text);
-                    size_t outbytes = inbytes;
-                    char *alpha = calloc(outbytes + 1, 1);
-                    char *inp = tweets[i].text;
-                    char *outp = alpha;
+                    char *alpha = utf8_to_alpha(alpha_converter, tweets[i].text);
 
-                    iconv(alpha_converter, &inp, &inbytes, &outp, &outbytes);
                     printf("utf-8: %s\n", tweets[i].text);
                     printf("alpha: %s\n", alpha);
 
