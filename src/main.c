@@ -295,6 +295,9 @@ int main(int argc, char *argv[])
         new_tweets_different = compare_tweets(last_tweets, tweets);
         if (!new_tweets_different) {
             fprintf(stderr, "New tweets are not different\n");
+            for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
+                tweet_free(&tweets[i]);
+            }
             goto next;
         }
 
@@ -305,6 +308,9 @@ int main(int argc, char *argv[])
 
         fwrite(packet, packet_size, 1, stdout);
         fflush(stdout);
+
+        free(pager_string);
+        free(packet);
 
         for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
             tweet_move(&last_tweets[i], &tweets[i]);
