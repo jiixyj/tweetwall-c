@@ -14,8 +14,8 @@ include_directories(
 )
 
 add_custom_command(OUTPUT alpha.h
-    COMMAND sh ./gen-8bit-gap.sh ${CMAKE_CURRENT_SOURCE_DIR}/ALPHA >
-                                 ${CMAKE_CURRENT_BINARY_DIR}/alpha.h
+    COMMAND AWK=awk sh ./gen-8bit-gap.sh ${CMAKE_CURRENT_SOURCE_DIR}/ALPHA >
+                                         ${CMAKE_CURRENT_BINARY_DIR}/alpha.h
     WORKING_DIRECTORY ${GLIBC_SOURCE_FOLDER}/iconvdata
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ALPHA
 )
