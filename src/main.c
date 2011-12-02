@@ -27,14 +27,19 @@ int main(int argc, char *argv[])
     while (loop) {
         char *packet;
         size_t packet_size;
-
-        if (tweet_get_packet(&packet, &packet_size)) {
+        FILE *packet_memstream = open_memstream(&packet, &packet_size);
+        if (!packet_memstream) {
+            perror("open_memstream");
             goto next;
         }
 
+        alpha_write_leading(packet_memstream);
+        tweet_write(packet_memstream);
+        alpha_write_closing(packet_memstream);
+
+        fclose(packet_memstream);
         fwrite(packet, packet_size, 1, stdout);
         fflush(stdout);
-
         free(packet);
 
       next:

@@ -107,16 +107,16 @@ static char *curl_fgraum_twitter()
     return NULL;
 }
 
-static int compare_tweets(struct tweet *old, struct tweet *new)
+static int new_tweets_different()
 {
     int i;
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
-        if ((old[i].id_str && !new[i].id_str) ||
-            (!old[i].id_str && new[i].id_str)) {
+        if ((last_tweets[i].id_str && !tweets[i].id_str) ||
+            (!last_tweets[i].id_str && tweets[i].id_str)) {
             return 1;
         }
-        if (old[i].id_str && new[i].id_str) {
-            if (strcmp(old[i].id_str, new[i].id_str)) {
+        if (last_tweets[i].id_str && tweets[i].id_str) {
+            if (strcmp(last_tweets[i].id_str, tweets[i].id_str)) {
                 return 1;
             }
         }
@@ -124,7 +124,7 @@ static int compare_tweets(struct tweet *old, struct tweet *new)
     return 0;
 }
 
-static void parse_tweets(char *json, struct tweet *tweets)
+static void parse_tweets(char *json)
 {
     json_t *root = NULL, *results;
     json_error_t error;
@@ -186,16 +186,10 @@ static void parse_tweets(char *json, struct tweet *tweets)
     }
 }
 
-
-static int build_string_for_pager(char **buffer, size_t *buffer_size,
-                                  struct tweet *tweets)
+static int build_string_for_pager(FILE *memstream)
 {
     int i;
-    FILE *memstream = open_memstream(buffer, buffer_size);
-    if (!memstream) {
-        perror("open_memstream");
-        return 1;
-    }
+    char *sound = "\x03" "\x02" "E(2" "\x00" "FE11";
 
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
         if (tweets[i].text) {
@@ -231,37 +225,25 @@ static int build_string_for_pager(char **buffer, size_t *buffer_size,
         }
     }
 
-    fclose(memstream);
-    fprintf(stderr, "%s\n", *buffer);
+    if (new_tweets_different()) {
+        fwrite(sound, 10, 1, memstream);
+    }
+
     return 0;
 }
 
-int tweet_get_packet(char **packet, size_t *packet_size) {
+int tweet_write(FILE *memstream) {
     int i;
     char *json;
-    int new_tweets_different = 0;
-    char *pager_string;
-    size_t pager_string_size;
 
     json = curl_fgraum_twitter();
     if (!json) {
         return 1;
     }
-    parse_tweets(json, tweets);
+    parse_tweets(json);
     free(json);
 
-    new_tweets_different = compare_tweets(last_tweets, tweets);
-    if (!new_tweets_different) {
-        for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
-            tweet_free(&tweets[i]);
-        }
-        return 1;
-    }
-
-    build_string_for_pager(&pager_string, &pager_string_size, tweets);
-    alpha_string_packet(pager_string, pager_string_size,
-                        packet, packet_size);
-    free(pager_string);
+    build_string_for_pager(memstream);
 
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
         tweet_move(&last_tweets[i], &tweets[i]);
