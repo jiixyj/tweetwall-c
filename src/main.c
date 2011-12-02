@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         free(packet);
 
       next:
-        sleep(10);
+        sleep(30);
     }
 
     alpha_shutdown();
