@@ -203,17 +203,20 @@ static int build_string_for_pager(FILE *memstream)
             fwrite(alpha + 8, strlen(alpha) - 8, 1, memstream);
 
             fwrite(" --- ", 5, 1, memstream);
-            strtok(created_at, " ");
-            token = strtok(NULL, " ");
-            fwrite(token, strlen(token), 1, memstream);
-            fwrite(" ", 1, 1, memstream);
-            token = strtok(NULL, " ");
-            fwrite(token, strlen(token), 1, memstream);
-            fwrite(" ", 1, 1, memstream);
-            token = strtok(NULL, " ");
-            token = strtok(NULL, " ");
-            fwrite(token, strlen(token), 1, memstream);
-            fwrite(" ", 1, 1, memstream);
+            if (strtok(created_at, " ")) {
+                if ((token = strtok(NULL, " "))) {
+                    fwrite(token, strlen(token), 1, memstream);
+                    fwrite(" ", 1, 1, memstream);
+                    if ((token = strtok(NULL, " "))) {
+                        fwrite(token, strlen(token), 1, memstream);
+                        fwrite(" ", 1, 1, memstream);
+                        if (strtok(NULL, " ") && (token = strtok(NULL, " "))) {
+                            fwrite(token, strlen(token), 1, memstream);
+                            fwrite(" ", 1, 1, memstream);
+                        }
+                    }
+                }
+            }
 
             if (i != NUMBER_OF_TWEETS - 1) {
                 fwrite("          ", 10, 1, memstream);
