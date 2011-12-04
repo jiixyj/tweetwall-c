@@ -8,6 +8,7 @@
 #include <curl/curl.h>
 
 #include "alpha.h"
+#include "entities.h"
 
 #define NUMBER_OF_TWEETS 3
 #define NUMBER_OF_TWEETS_STR "3"
@@ -235,7 +236,8 @@ static int build_string_for_pager(FILE *memstream)
     return 0;
 }
 
-int tweet_write(FILE *memstream) {
+int tweet_write(FILE *memstream)
+{
     int i;
     char *json;
 
@@ -255,7 +257,8 @@ int tweet_write(FILE *memstream) {
     return 0;
 }
 
-void tweet_shutdown() {
+void tweet_shutdown(void)
+{
     int i;
 
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {

@@ -18,6 +18,8 @@ static void exit_handler(int signal)
 
 int main(int argc, char *argv[])
 {
+    #pragma unused(argc, argv)
+
     signal(SIGINT, exit_handler);
 
     if (alpha_init()) {

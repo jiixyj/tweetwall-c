@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <iconv.h>
 
-int alpha_init();
+int alpha_init(void);
+void alpha_shutdown(void);
 
 void alpha_write_leading(FILE *memstream);
 void alpha_write_closing(FILE *memstream);

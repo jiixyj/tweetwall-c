@@ -1,5 +1,6 @@
 #include "alpha.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -18,7 +19,7 @@ void alpha_write_closing(FILE *memstream)
 
 char *utf8_to_alpha(char *utf8)
 {
-    int i;
+    size_t i;
 
     size_t inbytes = strlen(utf8);
     size_t outbytes = inbytes;
@@ -66,7 +67,7 @@ char *utf8_to_alpha(char *utf8)
     return fully_converted;
 }
 
-int alpha_init()
+int alpha_init(void)
 {
     alpha_converter = iconv_open("ALPHA//TRANSLIT//IGNORE", "UTF-8");
     if (alpha_converter == (iconv_t) -1) {
@@ -79,7 +80,7 @@ int alpha_init()
     return 0;
 }
 
-void alpha_shutdown()
+void alpha_shutdown(void)
 {
     iconv_close(alpha_converter);
 }

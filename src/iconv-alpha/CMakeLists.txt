@@ -1,4 +1,5 @@
 set(CMAKE_SHARED_LIBRARY_PREFIX)
+set(CMAKE_C_FLAGS "")
 
 add_library(ALPHA SHARED alpha.c alpha.h)
 

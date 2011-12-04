@@ -174,8 +174,8 @@ CHARMAP
 <U00BF>     /xa8         INVERTED QUESTION MARK
 <U00B0>     /xa9         DEGREE SIGN
 <U00A1>     /xaa         INVERTED EXCLAMATION MARK
-<U0337>     /xab         COMBINING SHORT SOLIDUS OVERLAY
-<U0338>     /xab         COMBINING LONG SOLIDUS OVERLAY
+% <U0337>     /xab         COMBINING SHORT SOLIDUS OVERLAY
+% <U0338>     /xab         COMBINING LONG SOLIDUS OVERLAY
 %           /xac
 %           /xad
 <U0107>     /xae         LATIN SMALL LETTER C WITH ACUTE
