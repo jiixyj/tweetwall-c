@@ -7,7 +7,6 @@
 #include <jansson.h>
 #include <curl/curl.h>
 
-#include "alpha.h"
 #include "entities.h"
 
 #define NUMBER_OF_TWEETS 3
@@ -108,7 +107,7 @@ static char *curl_fgraum_twitter()
     return NULL;
 }
 
-static int new_tweets_different()
+int tweet_new_tweets_different(void)
 {
     int i;
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
@@ -187,21 +186,23 @@ static void parse_tweets(char *json)
     }
 }
 
-static int build_string_for_pager(FILE *memstream)
+static int build_string_for_pager(char **string, size_t *string_size)
 {
     int i;
-    char *sound = "\x03" "\x02" "E(2" "\x00" "FE11";
+    FILE *memstream = open_memstream(string, string_size);
+    if (!memstream) {
+        perror("open_memstream");
+        return 1;
+    }
 
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
         if (tweets[i].text) {
             char *created_at = strdup(tweets[i].created_at);
             char *token;
-            char *alpha = utf8_to_alpha(tweets[i].text);
-            char *user_alpha = utf8_to_alpha(tweets[i].from_user);
 
-            fwrite(user_alpha, strlen(user_alpha), 1, memstream);
+            fwrite(tweets[i].from_user, strlen(tweets[i].from_user), 1, memstream);
             fwrite(": ", 2, 1, memstream);
-            fwrite(alpha + 8, strlen(alpha) - 8, 1, memstream);
+            fwrite(tweets[i].text + 8, strlen(tweets[i].text) - 8, 1, memstream);
 
             fwrite(" --- ", 5, 1, memstream);
             if (strtok(created_at, " ")) {
@@ -224,22 +225,20 @@ static int build_string_for_pager(FILE *memstream)
             }
 
             free(created_at);
-            free(alpha);
-            free(user_alpha);
         }
     }
 
-    if (new_tweets_different()) {
-        fwrite(sound, 10, 1, memstream);
-    }
+    fclose(memstream);
 
     return 0;
 }
 
-int tweet_write(FILE *memstream)
+int tweet_get_string(char **string)
 {
     int i;
     char *json;
+    size_t string_size;
+    int ret = 0;
 
     json = curl_fgraum_twitter();
     if (!json) {
@@ -248,13 +247,13 @@ int tweet_write(FILE *memstream)
     parse_tweets(json);
     free(json);
 
-    build_string_for_pager(memstream);
+    ret = build_string_for_pager(string, &string_size);
 
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
         tweet_move(&last_tweets[i], &tweets[i]);
     }
 
-    return 0;
+    return ret;
 }
 
 void tweet_shutdown(void)

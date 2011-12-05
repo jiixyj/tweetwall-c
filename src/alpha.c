@@ -6,15 +6,66 @@
 
 static iconv_t alpha_converter;
 
-void alpha_write_leading(FILE *memstream)
+int alpha_new(struct alpha_packet *packet)
 {
-    static const char *leading = "\x00\x00\x00\x00\x00" "\x01" "Z" "00" "\x02" "AA" "\x1b" " a";
-    fwrite(leading, 15, 1, memstream);
+    packet->memstream = open_memstream(&packet->data, &packet->data_size);
+    if (!packet->memstream) {
+        perror("open_memstream");
+        return 1;
+    }
+    alpha_write_leading(packet);
+    return 0;
 }
 
-void alpha_write_closing(FILE *memstream)
+int alpha_send(struct alpha_packet *packet)
 {
-    fwrite("\x04", 1, 1, memstream);
+    if (packet->memstream) {
+        fclose(packet->memstream);
+        packet->memstream = NULL;
+    }
+    fwrite(packet->data, packet->data_size, 1, stdout);
+    fflush(stdout);
+
+    return 0;
+}
+
+int alpha_destroy(struct alpha_packet *packet)
+{
+    if (packet->memstream) {
+        fclose(packet->memstream);
+        packet->memstream = NULL;
+    }
+    free(packet->data);
+
+    return 0;
+}
+
+int alpha_write_string(struct alpha_packet *packet, char *string)
+{
+    char *converted = utf8_to_alpha(string);
+    fwrite(converted, strlen(converted), 1, packet->memstream);
+    free(converted);
+
+    return 0;
+}
+
+int alpha_write_sound(struct alpha_packet *packet)
+{
+    static char *sound = "\x03" "\x02" "E(2" "\x00" "FE11";
+    fwrite(sound, 10, 1, packet->memstream);
+
+    return 0;
+}
+
+void alpha_write_leading(struct alpha_packet *packet)
+{
+    static const char *leading = "\x00\x00\x00\x00\x00" "\x01" "Z" "00" "\x02" "AA" "\x1b" " a";
+    fwrite(leading, 15, 1, packet->memstream);
+}
+
+void alpha_write_closing(struct alpha_packet *packet)
+{
+    fwrite("\x04", 1, 1, packet->memstream);
 }
 
 char *utf8_to_alpha(char *utf8)

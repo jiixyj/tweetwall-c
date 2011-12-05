@@ -27,24 +27,22 @@ int main(int argc, char *argv[])
     }
 
     while (loop) {
-        char *packet;
-        size_t packet_size;
-        FILE *packet_memstream = open_memstream(&packet, &packet_size);
-        if (!packet_memstream) {
-            perror("open_memstream");
-            goto next;
+        struct alpha_packet packet;
+
+        if (alpha_new(&packet) == 0) {
+            char *tweet_string = NULL;
+            if (tweet_get_string(&tweet_string) == 0) {
+                if (tweet_new_tweets_different()) {
+                    alpha_write_string(&packet, tweet_string);
+                    alpha_write_sound(&packet);
+                    alpha_write_closing(&packet);
+                    alpha_send(&packet);
+                }
+                free(tweet_string);
+            }
+            alpha_destroy(&packet);
         }
 
-        alpha_write_leading(packet_memstream);
-        tweet_write(packet_memstream);
-        alpha_write_closing(packet_memstream);
-
-        fclose(packet_memstream);
-        fwrite(packet, packet_size, 1, stdout);
-        fflush(stdout);
-        free(packet);
-
-      next:
         sleep(30);
     }
 
