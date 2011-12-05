@@ -43,6 +43,7 @@ int alpha_destroy(struct alpha_packet *packet)
 int alpha_write_string(struct alpha_packet *packet, char *string)
 {
     char *converted = utf8_to_alpha(string);
+    fwrite("Z" "00" "\x02" "AA" "\x1b" " a", 9, 1, packet->memstream);
     fwrite(converted, strlen(converted), 1, packet->memstream);
     free(converted);
 
@@ -59,7 +60,7 @@ int alpha_write_sound(struct alpha_packet *packet)
 
 void alpha_write_leading(struct alpha_packet *packet)
 {
-    static const char *leading = "\x00\x00\x00\x00\x00" "\x01" "Z" "00" "\x02" "AA" "\x1b" " a";
+    static const char *leading = "\x00\x00\x00\x00\x00" "\x01";
     fwrite(leading, 15, 1, packet->memstream);
 }
 
