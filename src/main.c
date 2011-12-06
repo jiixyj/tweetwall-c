@@ -18,8 +18,6 @@ static void exit_handler(int signal)
 
 int main(int argc, char *argv[])
 {
-    #pragma unused(argc, argv)
-
     signal(SIGINT, exit_handler);
 
     if (alpha_init()) {
@@ -32,6 +30,7 @@ int main(int argc, char *argv[])
             alpha_write_special_one(&packet, '$', NULL);
             alpha_write_closing(&packet);
             alpha_send(&packet);
+            alpha_destroy(&packet);
         }
         exit(EXIT_SUCCESS);
     }
@@ -42,6 +41,7 @@ int main(int argc, char *argv[])
             alpha_write_special_one(&packet, '$', "AAU0800FFFF" "BAU0020FFFF");
             alpha_write_closing(&packet);
             alpha_send(&packet);
+            alpha_destroy(&packet);
         }
     }
 
@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
             alpha_write_string(&packet, 'B', " c", "TWEET AN @FGRAUM");
             alpha_write_closing(&packet);
             alpha_send(&packet);
+            alpha_destroy(&packet);
         }
     }
 
