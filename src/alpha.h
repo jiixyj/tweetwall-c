@@ -14,7 +14,8 @@ struct alpha_packet {
 int alpha_init(void);
 void alpha_shutdown(void);
 
-int alpha_new(struct alpha_packet *packet);
+int alpha_new(struct alpha_packet *packet, char type_code,
+              char sign_address_high, char sign_address_low);
 int alpha_send(struct alpha_packet *packet);
 int alpha_destroy(struct alpha_packet *packet);
 

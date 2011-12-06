@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     while (loop) {
         struct alpha_packet packet;
 
-        if (alpha_new(&packet) == 0) {
+        if (alpha_new(&packet, 'Z', '0', '0') == 0) {
             char *tweet_string = NULL;
             if (tweet_get_string(&tweet_string) == 0) {
                 if (tweet_new_tweets_different()) {
