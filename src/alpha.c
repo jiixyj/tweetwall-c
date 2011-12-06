@@ -45,12 +45,18 @@ int alpha_destroy(struct alpha_packet *packet)
     return 0;
 }
 
-int alpha_write_string(struct alpha_packet *packet, char file_label, char *string)
+int alpha_write_string(struct alpha_packet *packet,
+                       char file_label,
+                       char *mode,
+                       char *string)
 {
     char *converted = utf8_to_alpha(string);
     fwrite("\x02" "A", 2, 1, packet->memstream);
     fputc(file_label, packet->memstream);
-    fwrite("\x1b" " a", 3, 1, packet->memstream);
+    if (mode) {
+        fwrite("\x1b", 1, 1, packet->memstream);
+        fwrite(mode, strlen(mode), 1, packet->memstream);
+    }
     fwrite(converted, strlen(converted), 1, packet->memstream);
     free(converted);
 
@@ -66,12 +72,12 @@ int alpha_write_sound(struct alpha_packet *packet)
 
 int alpha_write_special_one(struct alpha_packet *packet,
                             char label,
-                            char *data, size_t data_size)
+                            char *data)
 {
-    fputc('E', packet->memstream);
+    fwrite("\x02" "E", 2, 1, packet->memstream);
     fputc(label, packet->memstream);
-    if (!data || !data_size) {
-        fwrite(data, data_size, 1, packet->memstream);
+    if (data) {
+        fwrite(data, strlen(data), 1, packet->memstream);
     }
 
     return 0;
@@ -79,13 +85,13 @@ int alpha_write_special_one(struct alpha_packet *packet,
 
 int alpha_write_special_two(struct alpha_packet *packet,
                             char label_high, char label_low,
-                            char *data, size_t data_size)
+                            char *data)
 {
-    fputc('E', packet->memstream);
+    fwrite("\x02" "E", 2, 1, packet->memstream);
     fputc(label_high, packet->memstream);
     fputc(label_low, packet->memstream);
-    if (!data || !data_size) {
-        fwrite(data, data_size, 1, packet->memstream);
+    if (data) {
+        fwrite(data, strlen(data), 1, packet->memstream);
     }
 
     return 0;

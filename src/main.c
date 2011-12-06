@@ -26,10 +26,20 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    if (argc == 2 && !strcmp(argv[1], "--reset")) {
+        struct alpha_packet packet;
+        if (alpha_new(&packet, 'Z', '0', '0') == 0) {
+            alpha_write_special_one(&packet, '$', NULL);
+            alpha_write_closing(&packet);
+            alpha_send(&packet);
+        }
+        exit(EXIT_SUCCESS);
+    }
+
     {
         struct alpha_packet packet;
         if (alpha_new(&packet, 'Z', '0', '0') == 0) {
-            alpha_write_special_one(&packet, '$', NULL, 0);
+            alpha_write_special_one(&packet, '$', "AAU0800FFFF" "BAU0020FFFF");
             alpha_write_closing(&packet);
             alpha_send(&packet);
         }
@@ -38,16 +48,7 @@ int main(int argc, char *argv[])
     {
         struct alpha_packet packet;
         if (alpha_new(&packet, 'Z', '0', '0') == 0) {
-            alpha_write_special_one(&packet, '$', "BAL0005FFFF", 11);
-            alpha_write_closing(&packet);
-            alpha_send(&packet);
-        }
-    }
-
-    {
-        struct alpha_packet packet;
-        if (alpha_new(&packet, 'Z', '0', '0') == 0) {
-            alpha_write_string(&packet, 'B', "TWEET");
+            alpha_write_string(&packet, 'B', " c", "TWEET AN @FGRAUM");
             alpha_write_closing(&packet);
             alpha_send(&packet);
         }
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
             switch (tweet_get_string(&tweet_string)) {
             /* new tweets have arrived */
             case 1:
-                alpha_write_string(&packet, 'A', tweet_string);
+                alpha_write_string(&packet, 'A', " a", tweet_string);
                 alpha_write_sound(&packet);
                 alpha_write_closing(&packet);
                 alpha_send(&packet);  /* after this, fall through to case 0 */

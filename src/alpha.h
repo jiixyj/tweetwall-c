@@ -19,14 +19,17 @@ int alpha_new(struct alpha_packet *packet, char type_code,
 int alpha_send(struct alpha_packet *packet);
 int alpha_destroy(struct alpha_packet *packet);
 
-int alpha_write_string(struct alpha_packet *packet, char file_label, char *string);
+int alpha_write_string(struct alpha_packet *packet,
+                       char file_label,
+                       char *mode,
+                       char *string);
 int alpha_write_sound(struct alpha_packet *packet);
 int alpha_write_special_one(struct alpha_packet *packet,
                             char label,
-                            char *data, size_t data_size);
+                            char *data);
 int alpha_write_special_two(struct alpha_packet *packet,
                             char label_high, char label_low,
-                            char *data, size_t data_size);
+                            char *data);
 
 void alpha_write_leading(struct alpha_packet *packet);
 void alpha_write_closing(struct alpha_packet *packet);
