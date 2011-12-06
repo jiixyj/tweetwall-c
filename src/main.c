@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
         struct alpha_packet packet;
         if (alpha_new(&packet, 'Z', '0', '0') == 0) {
             alpha_write_special_one(&packet, '$', NULL, 0);
+            alpha_write_closing(&packet);
             alpha_send(&packet);
         }
     }
