@@ -19,7 +19,7 @@ int alpha_new(struct alpha_packet *packet, char type_code,
 int alpha_send(struct alpha_packet *packet);
 int alpha_destroy(struct alpha_packet *packet);
 
-int alpha_write_string(struct alpha_packet *packet, char *string);
+int alpha_write_string(struct alpha_packet *packet, char file_label, char *string);
 int alpha_write_sound(struct alpha_packet *packet);
 int alpha_write_special_one(struct alpha_packet *packet,
                             char label,

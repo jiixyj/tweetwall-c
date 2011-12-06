@@ -45,10 +45,12 @@ int alpha_destroy(struct alpha_packet *packet)
     return 0;
 }
 
-int alpha_write_string(struct alpha_packet *packet, char *string)
+int alpha_write_string(struct alpha_packet *packet, char file_label, char *string)
 {
     char *converted = utf8_to_alpha(string);
-    fwrite("\x02" "AA" "\x1b" " a", 6, 1, packet->memstream);
+    fwrite("\x02" "A", 2, 1, packet->memstream);
+    fputc(file_label, packet->memstream);
+    fwrite("\x1b" " a", 3, 1, packet->memstream);
     fwrite(converted, strlen(converted), 1, packet->memstream);
     free(converted);
 
