@@ -7,6 +7,4 @@
 int tweet_get_string(char **string);
 void tweet_shutdown(void);
 
-int tweet_new_tweets_different(void);
-
 #endif /* end of include guard: TWEET_H */

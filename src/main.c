@@ -31,18 +31,24 @@ int main(int argc, char *argv[])
 
         if (alpha_new(&packet, 'Z', '0', '0') == 0) {
             char *tweet_string = NULL;
-            if (tweet_get_string(&tweet_string) == 0) {
-                if (tweet_new_tweets_different()) {
-                    alpha_write_string(&packet, tweet_string);
-                    alpha_write_sound(&packet);
-                    alpha_write_closing(&packet);
-                    alpha_send(&packet);
-                }
+            switch (tweet_get_string(&tweet_string)) {
+            /* new tweets have arrived */
+            case 1:
+                alpha_write_string(&packet, tweet_string);
+                alpha_write_sound(&packet);
+                alpha_write_closing(&packet);
+                alpha_send(&packet);  /* after this, fall through to case 0 */
+            /* tweets are the same as last time; still need to free
+             * tweet_string */
+            case 0:
                 free(tweet_string);
+                break;
+            /* some error in tweet_get_string */
+            default:
+                break;
             }
             alpha_destroy(&packet);
         }
-
         sleep(30);
     }
 

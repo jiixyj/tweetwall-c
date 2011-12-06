@@ -107,20 +107,40 @@ static char *curl_fgraum_twitter()
     return NULL;
 }
 
-int tweet_new_tweets_different(void)
+static void tweet_move_tweets(void)
+{
+    int i;
+    for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
+        tweet_move(&last_tweets[i], &tweets[i]);
+    }
+}
+
+static void tweet_free_current_tweets(void)
+{
+    int i;
+    for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
+        tweet_free(&tweets[i]);
+    }
+}
+
+static int tweet_new_tweets_different(void)
 {
     int i;
     for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
         if ((last_tweets[i].id_str && !tweets[i].id_str) ||
             (!last_tweets[i].id_str && tweets[i].id_str)) {
+            tweet_move_tweets();
             return 1;
         }
         if (last_tweets[i].id_str && tweets[i].id_str) {
             if (strcmp(last_tweets[i].id_str, tweets[i].id_str)) {
+                tweet_move_tweets();
                 return 1;
             }
         }
     }
+    tweet_move_tweets();
+
     return 0;
 }
 
@@ -235,25 +255,26 @@ static int build_string_for_pager(char **string, size_t *string_size)
 
 int tweet_get_string(char **string)
 {
-    int i;
     char *json;
     size_t string_size;
-    int ret = 0;
 
     json = curl_fgraum_twitter();
     if (!json) {
-        return 1;
+        return -1;
     }
     parse_tweets(json);
     free(json);
 
-    ret = build_string_for_pager(string, &string_size);
-
-    for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
-        tweet_move(&last_tweets[i], &tweets[i]);
+    if (build_string_for_pager(string, &string_size)) {
+        tweet_free_current_tweets();
+        return -1;
     }
 
-    return ret;
+    if (tweet_new_tweets_different()) {
+        return 1;
+    }
+
+    return 0;
 }
 
 void tweet_shutdown(void)
