@@ -21,6 +21,12 @@ int alpha_destroy(struct alpha_packet *packet);
 
 int alpha_write_string(struct alpha_packet *packet, char *string);
 int alpha_write_sound(struct alpha_packet *packet);
+int alpha_write_special_one(struct alpha_packet *packet,
+                            char label,
+                            char *data, size_t data_size);
+int alpha_write_special_two(struct alpha_packet *packet,
+                            char label_high, char label_low,
+                            char *data, size_t data_size);
 
 void alpha_write_leading(struct alpha_packet *packet);
 void alpha_write_closing(struct alpha_packet *packet);

@@ -26,6 +26,14 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    {
+        struct alpha_packet packet;
+        if (alpha_new(&packet, 'Z', '0', '0') == 0) {
+            alpha_write_special_one(&packet, '$', NULL, 0);
+            alpha_send(&packet);
+        }
+    }
+
     while (loop) {
         struct alpha_packet packet;
 
