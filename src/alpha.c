@@ -14,7 +14,7 @@ int alpha_new(struct alpha_packet *packet, char type_code,
         perror("open_memstream");
         return 1;
     }
-    fwrite("\x00\x00\x00\x00\x00" "\x01" "\x02", 7, 1, packet->memstream);
+    fwrite("\x00\x00\x00\x00\x00" "\x01", 6, 1, packet->memstream);
     fputc(type_code, packet->memstream);
     fputc(sign_address_high, packet->memstream);
     fputc(sign_address_low, packet->memstream);
@@ -48,7 +48,7 @@ int alpha_destroy(struct alpha_packet *packet)
 int alpha_write_string(struct alpha_packet *packet, char *string)
 {
     char *converted = utf8_to_alpha(string);
-    fwrite("AA" "\x1b" " a", 5, 1, packet->memstream);
+    fwrite("\x02" "AA" "\x1b" " a", 6, 1, packet->memstream);
     fwrite(converted, strlen(converted), 1, packet->memstream);
     free(converted);
 
