@@ -144,7 +144,7 @@ static int tweet_new_tweets_different(void)
     return 0;
 }
 
-static void parse_tweets(char *json)
+static int parse_tweets(char *json)
 {
     json_t *root = NULL, *results;
     json_error_t error;
@@ -199,11 +199,14 @@ static void parse_tweets(char *json)
         decode_html_entities_utf8(tweets[i].text, NULL);
     }
 
+    return 0;
+
   cleanup:
     if (root) {
         json_decref(root);
         root = NULL;
     }
+    return 1;
 }
 
 static int build_string_for_pager(char **string, size_t *string_size)
@@ -259,8 +262,12 @@ int tweet_get_string(char **string)
     if (!json) {
         return -1;
     }
-    parse_tweets(json);
-    free(json);
+    if (parse_tweets(json)) {
+        free(json);
+        return -1;
+    } else {
+        free(json);
+    }
 
     if (build_string_for_pager(string, &string_size)) {
         tweet_free_current_tweets();
