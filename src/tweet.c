@@ -195,8 +195,8 @@ static int parse_tweets(char *json)
         tweets[i].text = strdup(text_cstr);
         tweets[i].id_str = strdup(id_str_cstr);
 
-        decode_html_entities_utf8(tweets[i].from_user, NULL);
-        decode_html_entities_utf8(tweets[i].text, NULL);
+        decode_html_entities_utf8(tweets[i].from_user);
+        decode_html_entities_utf8(tweets[i].text);
     }
 
     return 0;
