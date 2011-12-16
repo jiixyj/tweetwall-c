@@ -1,10 +1,11 @@
 #include "tweet.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 
-#include <jansson.h>
+#include <json/json.h>
 #include <curl/curl.h>
 
 #include "entities.h"
@@ -144,48 +145,86 @@ static int tweet_new_tweets_different(void)
     return 0;
 }
 
+static void prepare_json_for_libjsonc(char *json)
+{
+    int i;
+    while (*json) {
+        if (*json == '\\') {
+            ++json;
+            if (*json == 'U' || *json == 'u') {
+                *json = 'u';
+                for (i = 0; i < 4; ++i) {
+                    if (isxdigit(*++json)) {
+                        *json = tolower(*json);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        ++json;
+    }
+}
+
 static int parse_tweets(char *json)
 {
-    json_t *root = NULL, *results;
-    json_error_t error;
+    int err = 1;
+    json_tokener* tok;
+    json_object *root = NULL, *results;
     unsigned int i;
 
-    if (!(root = json_loads(json, 0, &error))) {
+    prepare_json_for_libjsonc(json);
+
+    puts(json);
+
+    tok = json_tokener_new();
+    if (!tok) {
+        fprintf(stderr, "Could not initialize tokenizer\n");
+        goto cleanup;
+    }
+    root = json_tokener_parse_ex(tok, json, -1);
+    if (tok->err != json_tokener_success) {
+        fprintf(stderr, "json_tokener_parse_ex: error %s at offset %d\n",
+                        json_tokener_errors[tok->err], tok->char_offset);
+        goto cleanup;
+    }
+
+    if (!root) {
         fprintf(stderr, "Could not parse twitter response\n");
         goto cleanup;
     }
 
-    if (!(results = json_object_get(root, "results"))) {
+    if (!(results = json_object_object_get(root, "results"))) {
         fprintf(stderr, "Could not find 'results' in twitter response\n");
         goto cleanup;
     }
 
-    if (!json_is_array(results)) {
+    if (json_object_get_type(results) != json_type_array) {
         fprintf(stderr, "'results' in twitter response is no array\n");
         goto cleanup;
     }
 
-    for (i = 0; i < json_array_size(results); ++i) {
-        json_t *result, *created_at, *from_user, *text, *id_str;
+    for (i = 0; i < json_object_array_length(results); ++i) {
+        json_object *result, *created_at, *from_user, *text, *id_str;
         const char *created_at_cstr, *from_user_cstr, *text_cstr, *id_str_cstr;
 
-        if (!(result = json_array_get(results, i))) {
+        if (!(result = json_object_array_get_idx(results, i))) {
             fprintf(stderr, "Could not get results array from response\n");
             continue;
         }
 
-        if (!(created_at = json_object_get(result, "created_at")) ||
-             !(from_user = json_object_get(result, "from_user")) ||
-                !(id_str = json_object_get(result, "id_str")) ||
-                  !(text = json_object_get(result, "text"))) {
+        if (!(created_at = json_object_object_get(result, "created_at")) ||
+             !(from_user = json_object_object_get(result, "from_user")) ||
+                !(id_str = json_object_object_get(result, "id_str")) ||
+                  !(text = json_object_object_get(result, "text"))) {
             fprintf(stderr, "Could not get specified field(s) from result\n");
             continue;
         }
 
-        if (!(created_at_cstr = json_string_value(created_at)) ||
-             !(from_user_cstr = json_string_value(from_user)) ||
-                !(id_str_cstr = json_string_value(id_str)) ||
-                  !(text_cstr = json_string_value(text))) {
+        if (!(created_at_cstr = json_object_get_string(created_at)) ||
+             !(from_user_cstr = json_object_get_string(from_user)) ||
+                !(id_str_cstr = json_object_get_string(id_str)) ||
+                  !(text_cstr = json_object_get_string(text))) {
             fprintf(stderr, "Expected different type of result field\n");
             continue;
         }
@@ -199,14 +238,15 @@ static int parse_tweets(char *json)
         decode_html_entities_utf8(tweets[i].text);
     }
 
-    return 0;
+    err = 0;
 
   cleanup:
+    json_tokener_free(tok);
     if (root) {
-        json_decref(root);
+        json_object_put(root);
         root = NULL;
     }
-    return 1;
+    return err;
 }
 
 static int build_string_for_pager(char **string, size_t *string_size)

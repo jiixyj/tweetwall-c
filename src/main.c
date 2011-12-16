@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 
     alpha_shutdown();
     tweet_shutdown();
+    xmlCleanupParser();
 
     return 0;
 }
