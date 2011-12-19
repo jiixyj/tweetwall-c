@@ -174,8 +174,6 @@ static int parse_tweets(char *json)
 
     prepare_json_for_libjsonc(json);
 
-    puts(json);
-
     tok = json_tokener_new();
     if (!tok) {
         fprintf(stderr, "Could not initialize tokenizer\n");
