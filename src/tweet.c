@@ -151,8 +151,7 @@ static void prepare_json_for_libjsonc(char *json)
     while (*json) {
         if (*json == '\\') {
             ++json;
-            if (*json == 'U' || *json == 'u') {
-                *json = 'u';
+            if (*json == 'u') {
                 for (i = 0; i < 4; ++i) {
                     if (isxdigit(*++json)) {
                         *json = tolower(*json);
