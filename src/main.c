@@ -8,19 +8,16 @@
 #include "tweet.h"
 #include "alpha.h"
 
-static int loop = 1;
-
-static void exit_handler(int signal)
-{
-    fprintf(stderr, "Caught signal %d\n", signal);
-    loop = 0;
-}
+int loop = 1;
 
 int main(int argc, char *argv[])
 {
-    signal(SIGINT, exit_handler);
-
     if (alpha_init()) {
+        return EXIT_FAILURE;
+    }
+
+    /* The socket thread is responsible to catch SIGINT and to set loop to 0 */
+    if (socket_start_listening_thread()) {
         return EXIT_FAILURE;
     }
 
@@ -81,6 +78,7 @@ int main(int argc, char *argv[])
         sleep(30);
     }
 
+    socket_join_listening_thread();
     alpha_shutdown();
     tweet_shutdown();
     xmlCleanupParser();

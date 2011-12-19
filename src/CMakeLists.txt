@@ -1,6 +1,6 @@
 add_library(alpha alpha)
 
-add_executable(tweetwall main tweet)
+add_executable(tweetwall main tweet socket)
 target_link_libraries(tweetwall entities alpha json curl)
 
 include_directories(3rdparty)
