@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <time.h>
+#include <pthread.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -11,7 +12,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#include <pthread.h>
+#include "alpha.h"
 
 extern int loop;
 
@@ -115,7 +116,15 @@ static void *socket_listen(void *arg)
                 }
 
                 buf[ret] = '\0';
-                printf("%s\n", buf);
+                {
+                    struct alpha_packet packet;
+                    if (alpha_new(&packet, 'Z', '0', '0') == 0) {
+                        alpha_write_string(&packet, '0', " c", buf);
+                        alpha_write_closing(&packet);
+                        alpha_send(&packet);
+                        alpha_destroy(&packet);
+                    }
+                }
             }
         }
     }
