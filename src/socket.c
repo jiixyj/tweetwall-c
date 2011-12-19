@@ -105,8 +105,8 @@ static void *socket_listen(void *arg)
                 }
             } else {
                 int new_fd = events[i].data.fd;
-                unsigned char buf[126];
-                ssize_t ret = recv(new_fd, buf, 125, 0);
+                unsigned char buf[125];
+                ssize_t ret = recv(new_fd, buf, 124, 0);
                 if (ret == -1 || ret == 0) {
                     fprintf(stderr, "continue %d\n", (int) ret);
                     if (ret == 0) {
