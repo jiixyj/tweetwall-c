@@ -35,7 +35,9 @@ int main(int argc, char *argv[])
     {
         struct alpha_packet packet;
         if (alpha_new(&packet, 'Z', '0', '0') == 0) {
-            alpha_write_special_one(&packet, '$', "AAU0800FFFF" "BAU0020FFFF");
+            alpha_write_special_one(&packet, '$', "AAU0800FFFF"
+                                                  "BAU0020FFFF"
+                                                  "CAU0800FFFF");
             alpha_write_closing(&packet);
             alpha_send(&packet);
             alpha_destroy(&packet);

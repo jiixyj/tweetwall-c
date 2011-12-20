@@ -119,7 +119,7 @@ static void *socket_listen(void *arg)
                 {
                     struct alpha_packet packet;
                     if (alpha_new(&packet, 'Z', '0', '0') == 0) {
-                        alpha_write_string(&packet, '0', " c", buf);
+                        alpha_write_string(&packet, 'C', " a", buf);
                         alpha_write_closing(&packet);
                         alpha_send(&packet);
                         alpha_destroy(&packet);
