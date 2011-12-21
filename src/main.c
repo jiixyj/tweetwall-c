@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     {
         struct alpha_packet packet;
         if (alpha_new(&packet, 'Z', '0', '0') == 0) {
-            alpha_write_string(&packet, 'B', " c", "TWEET AN @FGRAUM");
+            alpha_write_string(&packet, 'B', " c", "TWEET AN @FGRAUM ");
             alpha_write_closing(&packet);
             alpha_send(&packet);
             alpha_destroy(&packet);
