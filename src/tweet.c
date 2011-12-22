@@ -127,7 +127,7 @@ static void tweet_free_current_tweets(void)
 static int tweet_new_tweets_different(void)
 {
     int i;
-    long id_last, id_old;
+    long long id_last, id_old;
     int new_different;
 
     if (!last_tweets[0].id_str || !tweets[0].id_str) {
@@ -135,8 +135,8 @@ static int tweet_new_tweets_different(void)
         return 1;
     }
 
-    id_last = strtol(last_tweets[0].id_str, NULL, 10);
-    id_old = strtol(tweets[0].id_str, NULL, 10);
+    id_last = strtoll(last_tweets[0].id_str, NULL, 10);
+    id_old = strtoll(tweets[0].id_str, NULL, 10);
 
     tweet_move_tweets();
 
