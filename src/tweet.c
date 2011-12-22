@@ -127,22 +127,20 @@ static void tweet_free_current_tweets(void)
 static int tweet_new_tweets_different(void)
 {
     int i;
-    for (i = 0; i < NUMBER_OF_TWEETS; ++i) {
-        if ((last_tweets[i].id_str && !tweets[i].id_str) ||
-            (!last_tweets[i].id_str && tweets[i].id_str)) {
-            tweet_move_tweets();
-            return 1;
-        }
-        if (last_tweets[i].id_str && tweets[i].id_str) {
-            if (strcmp(last_tweets[i].id_str, tweets[i].id_str)) {
-                tweet_move_tweets();
-                return 1;
-            }
-        }
+    long id_last, id_old;
+    int new_different;
+
+    if (!last_tweets[0].id_str || !tweets[0].id_str) {
+        tweet_move_tweets();
+        return 1;
     }
+
+    id_last = strtol(last_tweets[0].id_str, NULL, 10);
+    id_old = strtol(tweets[0].id_str, NULL, 10);
+
     tweet_move_tweets();
 
-    return 0;
+    return id_last > id_old;
 }
 
 static void prepare_json_for_libjsonc(char *json)
