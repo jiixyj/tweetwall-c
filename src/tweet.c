@@ -138,9 +138,13 @@ static int tweet_new_tweets_different(void)
     id_last = strtoll(last_tweets[0].id_str, NULL, 10);
     id_old = strtoll(tweets[0].id_str, NULL, 10);
 
-    tweet_move_tweets();
-
-    return id_last > id_old;
+    if (id_last > id_old) {
+        tweet_move_tweets();
+        return 1;
+    } else {
+        tweet_free_current_tweets();
+        return 0;
+    }
 }
 
 static void prepare_json_for_libjsonc(char *json)
